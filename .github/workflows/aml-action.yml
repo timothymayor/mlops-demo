@@ -37,6 +37,8 @@ jobs:
       steps:
       - name: check-out-repo-step
         uses: actions/checkout@v2
+      - name: install az ml extension
+        run: az extension add -n ml -y
       - name: azure-login-step
         uses: azure/login@v1
         with:

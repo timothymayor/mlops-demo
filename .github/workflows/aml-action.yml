@@ -43,7 +43,6 @@ jobs:
           creds: ${{secrets.AZURE_CREDENTIALS}}
       - name: set-azureml-ws-context-step
         run: cd code
-        working-directory: cli
       - name: create-model-step
         id: create-model-step
         run: az ml model create -n mlops-model -l latest -p runs:/$run_id/model --type mlflow_model --resource-group osomorog --workspace-name stages-demo

@@ -24,4 +24,4 @@ jobs:
     - name: set current directory
       run: cd code
     - name: run pipeline
-      run: az ml job create --file code/aml_service/pipeline-job.yml --resource-group osomorog --workspace-name stages-demo
+      run: az ml job create --file code/aml_service/nyc-taxi/pipeline.yml --resource-group osomorog --workspace-name stages-demo

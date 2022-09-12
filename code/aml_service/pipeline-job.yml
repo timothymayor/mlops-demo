@@ -1,0 +1,60 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+experiment_name: diabetes-pipeline-example
+
+# <inputs_and_outputs>
+inputs:
+  pipeline_job_input: #using dataset, can use datastore + datapath also
+    dataset: azureml:diabetes-data:1
+    mode: download
+
+outputs: 
+  pipeline_job_cleaned_data:
+    mode: upload
+  pipeline_job_normalized_data:
+    mode: upload
+  pipeline_job_trained_model:
+    mode: upload
+# </inputs_and_outputs>
+
+# <jobs>
+settings:
+  datastore: azureml:workspaceblobstore
+
+jobs:
+  fix-missing-job:
+    type: command
+    code:
+      local_path: model
+    inputs:
+      input_data: ${{inputs.pipeline_job_input}}
+    outputs:
+      output_data: ${{outputs.pipeline_job_cleaned_data}}
+    command: python fix-missing-data.py --input_data ${{inputs.input_data}} --output_data ${{outputs.output_data}}
+    compute: azureml:aml-cluster
+    environment: azureml:basic-env-scikit:2
+
+  normalize-job:
+    type: command
+    code:
+      local_path: model
+    inputs:
+      input_data: ${{jobs.fix-missing-job.outputs.output_data}}
+    outputs:
+      output_data: ${{outputs.pipeline_job_normalized_data}}
+    command: python normalize-data.py --input_data ${{inputs.input_data}} --output_data ${{outputs.output_data}}
+    compute: azureml:aml-cluster
+    environment: azureml:basic-env-scikit:2
+
+  train-job:
+    type: command
+    code:
+      local_path: model
+    inputs:
+      training_data: ${{jobs.normalize-job.outputs.output_data}}
+    outputs:
+      model_output: ${{outputs.pipeline_job_trained_model}}
+    command: python train-decision-tree.py --training_data ${{inputs.training_data}} --model_output ${{outputs.model_output}}
+    compute: azureml:aml-cluster
+    environment: azureml:basic-env-scikit:2
+# </jobs>

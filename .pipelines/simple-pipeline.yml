@@ -1,0 +1,40 @@
+trigger: 
+- master
+
+stages:
+# - stage: test
+#   displayName: 'Code Quality'
+#   jobs:
+#   - job: Linting
+#     steps:
+#       - task: UsePythonVersion@0
+#         inputs:
+#           versionSpec: '3.7'
+#           addToPath: true 
+#       - script: |
+#           python -m pip install flake8
+#         displayName: 'Installing Flake8'
+#       - script: |
+#           flake8 src/
+#         displayName: 'Running linting tests'
+
+- stage: deployDev
+  displayName: 'Deploy to Dev'
+  jobs:
+    - deployment: publishPipeline
+      displayName: 'Model Training'
+      condition: always()
+      pool:
+        vmImage: 'Ubuntu-18.04'
+      environment: dev
+      strategy:
+       runOnce:
+         deploy:
+          steps:
+          - template: aml-steps.yml
+            parameters:
+              rgname: 'dev-mslearn'
+              amlwsname: 'dev-mslearn'
+              initialdatasetname: 'azureml:diabetes'
+              serviceconnectionname: 'spn-aml-workspace-dev'
+

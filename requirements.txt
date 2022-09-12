@@ -1,0 +1,5 @@
+pandas
+scikit-learn
+azureml-core
+azureml-pipeline
+azure.cli.core

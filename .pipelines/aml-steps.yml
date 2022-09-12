@@ -1,0 +1,30 @@
+parameters:
+- name: rgname  # defaults for any parameters that aren't specified
+  default: ''
+- name: amlwsname
+  default: ''
+- name: initialdatasetname
+  default: ''
+- name: serviceconnectionname
+  default: ''
+
+steps:
+- checkout: self
+
+- script: az --version
+  displayName: 'Check Az Version'
+
+- script: az extension add -n ml -y
+  displayName: 'Install Azure ML CLI v2'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: ${{ parameters.serviceconnectionname }} #'spn-aml-workspace-dev'
+    scriptType: bash
+    scriptLocation: inlineScript
+    workingDirectory: $(Build.SourcesDirectory)
+    inlineScript: |
+      cd code
+      az ml job create --file aml_service/pipeline-job.yml --resource-group ${{parameters.rgname}} --workspace-name ${{parameters.amlwsname}} --set inputs.pipeline_job_input.dataset=${{parameters.initialdatasetname}}
+  displayName: 'Run Azure Machine Learning Pipeline'
+

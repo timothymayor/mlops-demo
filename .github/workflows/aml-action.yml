@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest 
+    environment:
+      name: dev 
     steps:
     - name: check out repo
       uses: actions/checkout@v2
@@ -23,5 +25,26 @@ jobs:
         creds: ${{secrets.AZURE_CREDENTIALS}}
     - name: set current directory
       run: cd code
-    - name: run pipeline
-      run: az ml job create --file code/aml_service/nyc-taxi/pipeline.yml --resource-group osomorog --workspace-name stages-demo
+    - name: run-pipeline
+      run: run_id=$(az ml job create --file code/aml_service/nyc-taxi/pipeline.yml --resource-group osomorog --workspace-name stages-demo  --query name -o tsv)
+  
+  register-model-job:
+      needs: train-job
+      environment: 
+        name: staging
+        url: $run_id
+      runs-on: ubuntu-18.04
+      steps:
+      - name: check-out-repo-step
+        uses: actions/checkout@v2
+      - name: azure-login-step
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
+      - name: set-azureml-ws-context-step
+        run: cd code
+        working-directory: cli
+      - name: create-model-step
+        id: create-model-step
+        run: az ml model create -n mlops-model -l latest -p runs:/$run_id/model --type mlflow_model --resource-group osomorog --workspace-name stages-demo
+          
